@@ -1,9 +1,9 @@
-import { Prisma } from "@prisma/client";
 import prisma from "../config/prisma";
 import Decimal from 'decimal.js';
+import { TempTransactionData } from "src/types";
 
 export const paymentHistoryService = {
-    receiverPaymentHistory : async (transactionData: any) => {
+    receiverPaymentHistory : async (transactionData: TempTransactionData) => {
         const {
           processedTransaction,
           from_account_id,
@@ -20,7 +20,7 @@ export const paymentHistoryService = {
           });
 
         },
-    createPaymentHistory : async (transactionData: any) => {
+    createPaymentHistory : async (transactionData: TempTransactionData) => {
         const {
             processedTransaction,
             to_account_id,

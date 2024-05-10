@@ -1,14 +1,15 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { STATUS } from '../constants/status';
 import { paymentService } from '../services/paymentService';
+import { AuthenticatedRequest, PaymentAccount } from 'src/types';
 
 
 export const paymentController = {
-  createPaymentAccount: async (req: any, res: Response) => {
+  createPaymentAccount: async (req: AuthenticatedRequest | any, res: Response) => {
     try {
       const userId = req.user.user.id;
       const { account_type, account_number, balance = 0 } = req.body;
-      const newPaymentAccount = await paymentService.createPaymentAccount({
+      const newPaymentAccount : PaymentAccount = await paymentService.createPaymentAccount({
         user_id: userId,
         account_type,
         account_number,
@@ -22,7 +23,7 @@ export const paymentController = {
     }
   },
 
-  getAllPaymentAccounts: async (req: any, res: Response) => {
+  getAllPaymentAccounts: async (req: AuthenticatedRequest | any, res: Response) => {
     try {
       const userId = req.user.user.id;
       const paymentAccounts = await paymentService.getAllPaymentAccountsByUserId(userId);
@@ -34,7 +35,7 @@ export const paymentController = {
     }
   },
 
-  getPaymentAccountById: async (req: any, res: Response) => {
+  getPaymentAccountById: async (req: AuthenticatedRequest | any, res: Response) => {
     try {
       const userId = req.user.user.id;
       const id  = +req.params.id as number
@@ -51,7 +52,7 @@ export const paymentController = {
     }
   },
 
-  getPaymentHistoryByAccountId: async (req: any, res: Response) => {
+  getPaymentHistoryByAccountId: async (req: AuthenticatedRequest | any, res: Response) => {
     try {
       const userId = req.user.user.id;
       const id  = +req.params.id as number

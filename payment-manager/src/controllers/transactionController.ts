@@ -1,43 +1,12 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { transactionService } from '../services/transactionService';
 
 import { STATUS } from '../constants/status';
-import { Prisma } from '@prisma/client';
+import { AuthenticatedRequest, Transaction } from 'src/types';
 
 export const transactionController = {
-  createTransactionHandler : async (req: any, res: Response) => {
-    try {
-      const { 
-        from_account_id,
-        to_account_id,
-        amount,
-        timestamp,
-        status
-       } = req.body;
-       const userId = req.user.user.id;
-
-       if (!from_account_id || !to_account_id || !amount || !timestamp || !status) {
-        return res.status(STATUS.BAD_REQ).json({ error: 'Missing required fields' });
-      }
-
-      const transactionData = {
-        from_account_id,
-        to_account_id,
-        amount,
-        timestamp,
-        status,
-        userId
-      };
-
-      const transaction = await transactionService.createTransaction(transactionData);
-
-      res.status(STATUS.CREATED).json(transaction);
-    } catch (error) {
-      res.status(STATUS.NETWORK_ERROR).json({ error: 'Failed to create transaction' });
-    }
-  },
   
-  getTransactionByIdHandler : async (req: any, res: Response) => {
+  getTransactionByIdHandler : async (req: Request, res: Response) => {
     try {
       const transactionId = req.params.id;
       const transaction = await transactionService.getTransactionById(transactionId);
@@ -52,7 +21,7 @@ export const transactionController = {
     }
   },
   
-  getTransactionsByUserIdHandler : async (req: any, res: Response) => {
+  getTransactionsByUserIdHandler : async (req: AuthenticatedRequest | any, res: Response) => {
     try {
       const userId = req.user.user.id;
       const transactions = await transactionService.getTransactionsByUserId(userId);
@@ -62,7 +31,7 @@ export const transactionController = {
     }
   },
   
-  processTransactionHandler : async (req: any, res: Response) => {
+  processTransactionHandler : async (req: Request, res: Response) => {
     try {
       const transactionData = req.body;
       const transaction = await transactionService.processTransaction(transactionData);

@@ -1,12 +1,12 @@
 
+import { Transaction } from "src/types";
 import prisma from "../config/prisma";
 import { paymentHistoryService } from "./paymentHistoryService";
 import Decimal from "decimal.js";
 
-
 export const transactionService = {
     
-  createTransaction : async (transactionData: any) => {
+  createTransaction : async (transactionData: Transaction) => {
     const {
       from_account_id,
       to_account_id,
@@ -32,7 +32,7 @@ export const transactionService = {
       return transaction;
     },
     
-    getTransactionById : async (transactionId: any) => {
+    getTransactionById : async (transactionId: string) => {
       const transaction = await prisma.transaction.findUnique({
         where: {
           id: transactionId,
@@ -61,16 +61,20 @@ export const transactionService = {
       return transactions;
     },
     
-    processTransaction: (transaction: any) => {
+    processTransaction: (transaction: Transaction) => {
       return new Promise((resolve, reject) => {
         console.log('Transaction processing started for:', transaction);
 
         transaction.status = 'pending'
     
         setTimeout(async () => {
-          let transact : any
+          let transact : Transaction
           try {
             const { from_account_id, to_account_id, amount } = transaction;
+
+            if (!from_account_id || !to_account_id || !amount ) {
+              throw new Error('Missing required fields' );
+            }
     
             const fromAccount = await prisma.paymentAccount.findUnique({
               where: { id: from_account_id },

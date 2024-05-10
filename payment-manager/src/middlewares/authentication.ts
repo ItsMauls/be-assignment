@@ -1,8 +1,9 @@
-import { Response, NextFunction } from 'express';
+import { Response, NextFunction, Request } from 'express';
 import { supabase } from '../config/supabase';
 import { STATUS } from '../constants/status';
+import { AuthenticatedRequest } from 'src/types';
 
-export const authMiddleware = async (req: any, res: Response, next: NextFunction) => {
+export const authMiddleware = async (req: AuthenticatedRequest | any, res: Response, next: NextFunction) => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
