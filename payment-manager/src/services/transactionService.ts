@@ -36,7 +36,7 @@ export const transactionService = {
       return transactions;
     },
     processSendTransaction: async (transaction: Transaction) => {
-      const { from_account_id, to_account_id, amount } = transaction;
+      const { from_account_id, to_account_id, amount, currency } = transaction;
   
       if (!from_account_id || !to_account_id || !amount) {
         throw new Error('Missing required fields');
@@ -73,6 +73,7 @@ export const transactionService = {
           amount: new Decimal(amount),
           timestamp: new Date(),
           status: 'pending',
+          currency
         },
       });
   
@@ -114,7 +115,7 @@ export const transactionService = {
       return processedTransaction;
     },
     processWithdrawTransaction: async (transaction: Transaction) => {
-      const { from_account_id, amount } = transaction;
+      const { from_account_id, amount, currency} = transaction;
   
       if (!from_account_id || !amount) {
         throw new Error('Missing required fields');
@@ -142,6 +143,7 @@ export const transactionService = {
           },          
           amount: new Decimal(amount),
           timestamp: new Date(),
+          currency,
           status: 'pending',
         } as any,
       });
