@@ -1,36 +1,11 @@
 
-import { Transaction } from "src/types";
+import { TempTransactionData, Transaction } from "src/types";
 import prisma from "../config/prisma";
 import { paymentHistoryService } from "./paymentHistoryService";
 import Decimal from "decimal.js";
+import { processTransaction } from "../utils";
 
 export const transactionService = {
-    
-  createTransaction : async (transactionData: Transaction) => {
-    const {
-      from_account_id,
-      to_account_id,
-      amount,
-      timestamp,
-      status
-    } = transactionData;
-    
-      const transaction = await prisma.transaction.create({
-        data: {
-          from_account: {
-            connect: { id: from_account_id },
-          },
-          to_account: {
-            connect: { id: to_account_id },
-          },
-          amount: new Decimal(amount),
-          timestamp: new Date(timestamp),
-          status,
-        },
-      });
-      
-      return transaction;
-    },
     
     getTransactionById : async (transactionId: string) => {
       const transaction = await prisma.transaction.findUnique({
@@ -60,113 +35,144 @@ export const transactionService = {
       });
       return transactions;
     },
-    
-    processTransaction: (transaction: Transaction) => {
-      return new Promise((resolve, reject) => {
-        console.log('Transaction processing started for:', transaction);
-
-        transaction.status = 'pending'
-    
-        setTimeout(async () => {
-          let transact : Transaction
-          try {
-            const { from_account_id, to_account_id, amount } = transaction;
-
-            if (!from_account_id || !to_account_id || !amount ) {
-              throw new Error('Missing required fields' );
-            }
-    
-            const fromAccount = await prisma.paymentAccount.findUnique({
-              where: { id: from_account_id },
-            });
-    
-            if (!fromAccount) {
-              throw new Error('Sender payment account not found');
-            }
-    
-            let toAccount = null;
-            if (to_account_id) {
-              toAccount = await prisma.paymentAccount.findUnique({
-                where: { id: to_account_id },
-              });
-    
-              if (!toAccount) {
-                throw new Error('Recipient payment account not found');
-              }
-            }
-    
-            if (fromAccount.balance.lt(new Decimal(amount))) {
-              throw new Error('Insufficient balance');
-            }
-    
-            const processedTransaction = await prisma.transaction.create({
-              data: {
-                from_account: {
-                  connect: { id: from_account_id },
-                },
-                to_account: {
-                  connect: { id: to_account_id },
-                },
-                amount: new Decimal(amount),
-                timestamp: new Date(),
-                status: 'pending',
-              },
-            });
-            transact = processedTransaction
-
-            await prisma.paymentAccount.update({
-              where: { id: from_account_id },
-              data: {
-                balance: fromAccount.balance.minus(new Decimal(amount)),
-              },
-            });
-    
-            if (toAccount) {
-              await prisma.paymentAccount.update({
-                where: { id: to_account_id },
-                data: {
-                  balance: toAccount.balance.plus(new Decimal(amount)),
-                },
-              });
-            }
-
-            await prisma.transaction.update({
-              where: { id: processedTransaction.id },
-              data: {
-                status: 'success',
-              },
-            });
-            
-            const transactionData = {
-              processedTransaction,
-              from_account_id,
-              to_account_id,
-              amount,
-              toAccount
-            }
-
-            await paymentHistoryService.createPaymentHistory(transactionData)
+    processSendTransaction: async (transaction: Transaction) => {
+      const { from_account_id, to_account_id, amount } = transaction;
   
-            // Make PaymentHistory for receiver (if true)
-            if (toAccount) {
-              await paymentHistoryService.receiverPaymentHistory(transactionData)
-            }
-    
-            console.log('Transaction processed for:', processedTransaction);
-            resolve(processedTransaction);
-          } catch (error) {
-            console.error('Failed to process transaction:', error);
-
-            await prisma.transaction.update({
-              where: { id: transact.id },
-              data: {
-                status: 'failed',
-              },
-            });
-
-          }
-        }, 30000); // 30 detik
+      if (!from_account_id || !to_account_id || !amount) {
+        throw new Error('Missing required fields');
+      }
+  
+      const fromAccount = await prisma.paymentAccount.findUnique({
+        where: { id: from_account_id },
       });
+  
+      if (!fromAccount) {
+        throw new Error('Sender payment account not found');
+      }
+  
+      const toAccount = await prisma.paymentAccount.findUnique({
+        where: { id: to_account_id },
+      });
+  
+      if (!toAccount) {
+        throw new Error('Recipient payment account not found');
+      }
+  
+      if (fromAccount.balance.lt(new Decimal(amount))) {
+        throw new Error('Insufficient balance');
+      }
+  
+      const processedTransaction = await prisma.transaction.create({
+        data: {
+          from_account: {
+            connect: { id: from_account_id },
+          },
+          to_account: {
+            connect: { id: to_account_id },
+          },
+          amount: new Decimal(amount),
+          timestamp: new Date(),
+          status: 'pending',
+        },
+      });
+  
+      await processTransaction(processedTransaction);
+  
+      await prisma.paymentAccount.update({
+        where: { id: from_account_id },
+        data: {
+          balance: fromAccount.balance.minus(new Decimal(amount)),
+        },
+      });
+  
+      await prisma.paymentAccount.update({
+        where: { id: to_account_id },
+        data: {
+          balance: toAccount.balance.plus(new Decimal(amount)),
+        },
+      });
+  
+      await prisma.transaction.update({
+        where: { id: processedTransaction.id },
+        data: {
+          status: 'success',
+        },
+      });
+  
+      const transactionData : any= {
+        processedTransaction,
+        from_account_id,
+        to_account_id,
+        amount,
+        toAccount
+      };
+  
+      await paymentHistoryService.createPaymentHistory(transactionData);
+      await paymentHistoryService.receiverPaymentHistory(transactionData);
+  
+      console.log('Send transaction processed for:', processedTransaction);
+      return processedTransaction;
     },
+    processWithdrawTransaction: async (transaction: Transaction) => {
+      const { from_account_id, amount } = transaction;
+  
+      if (!from_account_id || !amount) {
+        throw new Error('Missing required fields');
+      }
+  
+      const fromAccount = await prisma.paymentAccount.findUnique({
+        where: { id: from_account_id },
+      });
+  
+      if (!fromAccount) {
+        throw new Error('Payment account not found');
+      }
+  
+      if (fromAccount.balance.lt(new Decimal(amount))) {
+        throw new Error('Insufficient balance');
+      }
+  
+      const processedTransaction = await prisma.transaction.create({
+        data: {
+          from_account: {
+            connect: { id: from_account_id },
+          },
+          to_account: {
+            connect: { id: from_account_id },
+          },          
+          amount: new Decimal(amount),
+          timestamp: new Date(),
+          status: 'pending',
+        } as any,
+      });
+  
+      await processTransaction(processedTransaction);
+  
+      await prisma.paymentAccount.update({
+        where: { id: from_account_id },
+        data: {
+          balance: fromAccount.balance.minus(new Decimal(amount)),
+        },
+      });
+  
+      await prisma.transaction.update({
+        where: { id: processedTransaction.id },
+        data: {
+          status: 'success',
+        },
+      });
+  
+      const transactionData : TempTransactionData | any= {
+        processedTransaction,
+        from_account_id,
+        amount,
+      };
+  
+      await paymentHistoryService.createPaymentHistory(transactionData);
+  
+      console.log('Withdraw transaction processed for:', processedTransaction);
+      return processedTransaction;
+    },
+    
 }
 

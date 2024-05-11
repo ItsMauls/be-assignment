@@ -41,15 +41,15 @@ model PaymentHistory {
 }
 
 model Transaction {
-  id              String   @id @default(uuid())
-  from_account    PaymentAccount @relation("SentTransactions", fields: [from_account_id], references: [id])
+  id              String         @id @default(uuid())
+  from_account    PaymentAccount? @relation("SentTransactions", fields: [from_account_id], references: [id])
   from_account_id Int
-  to_account      PaymentAccount @relation("ReceivedTransactions", fields: [to_account_id], references: [id])
-  to_account_id   Int
+  to_account      PaymentAccount? @relation("ReceivedTransactions", fields: [to_account_id], references: [id])
+  to_account_id   Int?
   amount          Decimal
   timestamp       DateTime
-  status          String @default("pending")
-  currency        String @default("IDR")
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  status          String         @default("pending")
+  currency        String         @default("IDR")
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
 }

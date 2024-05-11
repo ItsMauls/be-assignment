@@ -22,7 +22,7 @@ export interface AuthenticatedRequest extends Request {
 
 export interface TempTransactionData {
   processedTransaction: any;
-  to_account_id: number
+  to_account_id: number | unknown | any
   from_account_id: number
   amount: number
   toAccount: boolean
@@ -56,8 +56,8 @@ export interface Transaction {
   id? : string
   from_account?: PaymentAccount;
   from_account_id: number;
-  to_account?: PaymentAccount;
-  to_account_id: number;
+  to_account?: PaymentAccount | null | undefined;
+  to_account_id?: number | null | undefined;
   amount: number | string | any;
   timestamp: Date;
   status: string;

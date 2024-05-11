@@ -56,9 +56,9 @@ export interface Transaction {
   id? : string
   from_account?: PaymentAccount;
   from_account_id: number;
-  to_account?: PaymentAccount;
-  to_account_id: number;
-  amount: number;
+  to_account?: PaymentAccount | null | undefined;
+  to_account_id?: number | null | undefined;
+  amount: number | string | any;
   timestamp: Date;
   status: string;
   currency?: string;

@@ -23,14 +23,14 @@ export const paymentHistoryService = {
     createPaymentHistory : async (transactionData: TempTransactionData) => {
         const {
             processedTransaction,
-            to_account_id,
             amount,
-            toAccount
+            toAccount,
+            from_account_id
           } = transactionData;
 
           await prisma.paymentHistory.create({
             data: {
-              account_id: to_account_id,
+              account_id: from_account_id,
               transaction_id: processedTransaction.id,
               amount: new Decimal(amount),
               transaction_type: toAccount ? 'send' : 'withdraw',

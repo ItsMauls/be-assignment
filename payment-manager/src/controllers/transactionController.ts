@@ -2,9 +2,9 @@ import { Request, Response } from 'express';
 import { transactionService } from '../services/transactionService';
 
 import { STATUS } from '../constants/status';
-import { AuthenticatedRequest, Transaction } from 'src/types';
+import { AuthenticatedRequest } from 'src/types';
 
-export const transactionController = {
+export const paymentController = {
   
   getTransactionByIdHandler : async (req: Request, res: Response) => {
     try {
@@ -31,14 +31,24 @@ export const transactionController = {
     }
   },
   
-  processTransactionHandler : async (req: Request, res: Response) => {
+  sendTransactionHandler: async (req: Request, res: Response) => {
     try {
       const transactionData = req.body;
-      const transaction = await transactionService.processTransaction(transactionData);
-
+      const transaction = await transactionService.processSendTransaction(transactionData);
       res.json(transaction);
     } catch (error) {
-      res.status(STATUS.NETWORK_ERROR).json({ error: 'Failed to process transaction' });
+      res.status(STATUS.NETWORK_ERROR).json({ error: 'Failed to process send transaction' });
+    }
+  },
+
+  withdrawTransactionHandler: async (req: Request, res: Response) => {
+    try {
+      const transactionData = req.body;
+      const transaction = await transactionService.processWithdrawTransaction(transactionData);
+      res.json(transaction);
+    } catch (error) {
+      console.log(error.message)
+      res.status(STATUS.NETWORK_ERROR).json({ error: 'Failed to process withdraw transaction' });
     }
   },
 }
