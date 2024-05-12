@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2016",
+    "module": "commonjs",
+    "rootDir": "./",
+    "baseUrl": "./",
+    "esModuleInterop": true,
+    "outDir": "./dist/",
+    "paths": {
+      "@prisma/client": ["./node_modules/@prisma/client"]
+    }
+  },
+  "exclude": ["src/**/*.test.ts"]
+}

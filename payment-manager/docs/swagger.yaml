@@ -1,0 +1,128 @@
+openapi: 3.0.0
+info:
+  title: Payment Manager API
+  version: 1.0.0
+  description: API for managing transactions and payment history
+
+servers:
+  - url: http://localhost:3001
+    description: Local server
+
+paths:
+  /payment/send:
+    post:
+      summary: Send a transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendTransactionRequest'
+      responses:
+        '200':
+          description: Transaction processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '500':
+          description: Server error
+      security:
+        - bearerAuth: []
+        
+  /payment/withdraw:
+    post:
+      summary: Perform a withdrawal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WithdrawTransactionRequest'
+      responses:
+        '200':
+          description: Withdrawal processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '500':
+          description: Server error
+      security:
+        - bearerAuth: []
+        
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      
+  schemas:
+    SendTransactionRequest:
+      type: object
+      required:
+        - from_account_id
+        - to_account_id
+        - amount
+      properties:
+        from_account_id:
+          type: integer
+        to_account_id:
+          type: integer
+        amount:
+          type: number
+          
+    WithdrawTransactionRequest:
+      type: object
+      required:
+        - from_account_id
+        - amount
+      properties:
+        from_account_id:
+          type: integer
+        amount:
+          type: number
+          
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        from_account_id:
+          type: integer
+        to_account_id:
+          type: integer
+          nullable: true
+        amount:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: string
+        currency:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          
+    PaymentHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+        account_id:
+          type: integer
+        transaction_id:
+          type: string
+        amount:
+          type: number
+        transaction_type:
+          type: string
+        created_at:
+          type: string
+          format: date-time

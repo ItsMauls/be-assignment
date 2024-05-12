@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator paymentClient {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+generator accountClient {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model PaymentAccount {
+  id                Int              @id @default(autoincrement())
+  user_id           String
+  account_type      String
+  account_number    String
+  balance           Decimal
+  payment_histories PaymentHistory[]
+  sent_transactions Transaction[]    @relation("SentTransactions")
+  received_transactions Transaction[] @relation("ReceivedTransactions")
+}
+
+model PaymentHistory {
+  id                 Int            @id @default(autoincrement())
+  payment_account    PaymentAccount @relation(fields: [account_id], references: [id])
+  account_id         Int
+  transaction_id     String
+  amount             Decimal
+  transaction_type   String
+  created_at         DateTime       @default(now())
+}
+
+model Transaction {
+  id              String         @id @default(uuid())
+  from_account    PaymentAccount? @relation("SentTransactions", fields: [from_account_id], references: [id])
+  from_account_id Int
+  to_account      PaymentAccount? @relation("ReceivedTransactions", fields: [to_account_id], references: [id])
+  to_account_id   Int?
+  amount          Decimal
+  timestamp       DateTime
+  status          String         @default("pending")
+  currency        String         @default("IDR")
+  created_at      DateTime       @default(now())
+  updated_at      DateTime       @updatedAt
+}

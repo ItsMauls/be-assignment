@@ -1,0 +1,218 @@
+openapi: 3.0.0
+info:
+  title: Account Payment Service API
+  version: 1.0.0
+  description: API for manage payment account and payment history
+
+servers:
+  - url: http://localhost:3000
+    description: Local Server
+
+paths:
+  /account:
+    post:
+      summary: Create new payment Account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentAccountRequest'
+      responses:
+        '201':
+          description: New payment accound successfully created!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentAccount'
+        '500':
+          description: Network Error
+      security:
+        - bearerAuth: []
+        
+    get:
+      summary: Get user's all payment accounts
+      responses:
+        '200':
+          description: Payment Account list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentAccount'
+        '500':
+          description: Network Errror
+      security:
+        - bearerAuth: []
+        
+  /account/{id}:
+    get:
+      summary: Get Payment Account by Id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Payment Account found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentAccount'
+        '404':
+          description: Payment Account not found
+        '500':
+          description: Network Error
+      security:
+        - bearerAuth: []
+        
+  /account/{id}/history:
+    get:
+      summary: Get Payment Account by Account Id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Payment History
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentHistory'
+        '500':
+          description: Network error
+      security:
+        - bearerAuth: []
+  /auth/login:
+    post:
+      summary: User login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/register:
+    post:
+      summary: User registration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful registration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+            email:
+              type: string
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+
+    CreatePaymentAccountRequest:
+      type: object
+      required:
+        - account_type
+        - account_number
+      properties:
+        account_type:
+          type: string
+        account_number:
+          type: string
+        balance:
+          type: number
+          default: 0
+
+    PaymentAccount:
+      type: object
+      properties:
+        id:
+          type: integer
+        user_id:
+          type: string
+        account_type:
+          type: string
+        account_number:
+          type: string
+        balance:
+          type: number
+
+    PaymentHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+        account_id:
+          type: integer
+        transaction_id:
+          type: string
+        amount:
+          type: number
+        transaction_type:
+          type: string
+        created_at:
+          type: string
+          format: date-time
